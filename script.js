@@ -10,31 +10,29 @@ const buttons = Object.fromEntries(buttonsGrandchildren.map(button => [button.id
 
 const display = document.querySelector("#display");
 
-let input1 = 0;
-let input2 = null;
+let current = null;
+let tempStore = null;
 let operation = null;
 let writeOver = false; //Bool to determine if we should "write over" current display,
 //like after an equals
 
-display.textContent = input1;
+display.textContent = 0;
 
 function doOper() {
     if (operation == "add") {
-        input1 += input2;
+     current += tempStore;
     }
     else if (operation == "subtract") {
-        input1 -= input2;
+     current = tempStore - current;
     }
     else if (operation == "multiply") {
-        input1 *= input2;
+     current *= tempStore;
     }
     else if (operation == "divide") {
-        input1 /= input2;
+     current = tempStore / current;
     }
-    input2 = null;
-    // operation = null; 
-    // Moving out, as not necessary with more opers, always necessary with "="
-    display.textContent = input1;
+    tempStore = null;
+    display.textContent = current;
 
 }
 
@@ -43,22 +41,15 @@ function buttonPress(e) {
     if (targ.classList.contains("num")) {
         console.log("pressed a number!");
         let num = parseInt(targ.id.slice(1));
-        if (operation) {
-            if (!(input2)) {
-                input2 = 0;
-            }
-            input2 = input2 * 10 + num;
-            display.textContent = input2;
+        if (writeOver || current == null) {
+            current = num;
+            writeOver = false;
         }
         else {
-            input1 = input1 * 10 + num;
-            if (writeOver) {
-                input1 = num;
-                writeOver = false;
-            }
-            display.textContent = input1;
+            current = current * 10 + num;
         }
-
+        display.textContent = current;
+        
     }
     else if (targ.classList.contains("oper")) {
         console.log("pressed an operator!");
@@ -66,19 +57,34 @@ function buttonPress(e) {
             doOper();
         }
         operation = targ.id;
+        tempStore = current;
+        current = null;
+
     }
     else if (targ.id == "equals") {
         console.log("pressed equals");
-        if (operation && !(input2 === null)) {
+        if (operation && !(tempStore === null)) {
             doOper();
             console.log("valid equals");
         }
         else {
             console.log("invalid equals");
-
         } //Need to make number erasable after equals hit
         operation = null;
         writeOver = true;
+    }
+    else if (targ.id == "delete") {
+        if (!(writeOver) && (!(current == null))) {
+            current = Math.floor(current / 10);
+            display.textContent = current;
+        }
+    }
+    else if (targ.id == "clear") {
+        current = null;
+        tempStore = null;
+        operation = null;
+        writeOver = false;
+        display.textContent = "0";
     }
 }
 
