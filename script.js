@@ -13,8 +13,6 @@ const display = document.querySelector("#display");
 let current = null;
 let tempStore = null;
 let operation = null;
-let writeOver = false; //Bool to determine if we should "write over" current display,
-//like after an equals
 
 display.textContent = 0;
 
@@ -41,9 +39,8 @@ function buttonPress(e) {
     if (targ.classList.contains("num")) {
         console.log("pressed a number!");
         let num = parseInt(targ.id.slice(1));
-        if (writeOver || current == null) {
+        if (current == null) {
             current = num;
-            writeOver = false;
         }
         else {
             current = current * 10 + num;
@@ -56,25 +53,29 @@ function buttonPress(e) {
         if (operation) { //If we already have a previous operation, we have to do that first.
             doOper();
         }
+        if (!(current === null)) { //If it's null we don't need to store it, and there might be something already being stored.
+            tempStore = current;
+            current = null;
+        }
         operation = targ.id;
-        tempStore = current;
-        current = null;
+        
 
     }
     else if (targ.id == "equals") {
         console.log("pressed equals");
-        if (operation && !(tempStore === null)) {
+        if (operation && !(tempStore === null) && !(current === null)) {
             doOper();
             console.log("valid equals");
         }
-        else {
-            console.log("invalid equals");
-        } //Need to make number erasable after equals hit
+        if (!(current === null)) { //If it's null we don't need to store it, and there might be something already being stored.
+            tempStore = current;
+            current = null;
+        }
         operation = null;
-        writeOver = true;
+        
     }
     else if (targ.id == "delete") {
-        if (!(writeOver) && (!(current == null))) {
+        if (!(current === null)) {
             current = Math.floor(current / 10);
             display.textContent = current;
         }
@@ -83,7 +84,6 @@ function buttonPress(e) {
         current = null;
         tempStore = null;
         operation = null;
-        writeOver = false;
         display.textContent = "0";
     }
 }
