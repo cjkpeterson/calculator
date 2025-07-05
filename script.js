@@ -13,17 +13,26 @@ const display = document.querySelector("#display");
 let current = null;
 let tempStore = 0;
 let operation = null;
-let decimal = null;
+let decimal = 0;
+let deciStore = 0;
 
-display.textContent = 0;
+display.textContent = "0.";
 
+function dotCheck() {
+    if (current % 1 == 0 && decimal == null) { // If it's whole...
+        console.log("adding .");
+        display.textContent += ".";
+        decimal = 0;
+    }
+}
 
 function quickStore() {
-    decimal = null;
     if (!(current === null)) { //If it's null we don't need to store it, and there might be something already being stored.
         tempStore = current;
         current = null;
+        deciStore = decimal;
     }
+    decimal = 0;
     operation = null;
 }
 
@@ -51,10 +60,12 @@ function buttonPress(e) {
         console.log("pressed a number!");
         let num = parseInt(targ.id.slice(1));
         if (current === null) {
+            decimal = null;
             current = num;
         }
         else if (!(decimal === null)) {
             current += num * (0.1 ** ++decimal);
+            current = parseFloat(current.toFixed(decimal));
         }
         else {
             current = current * 10 + num;
@@ -67,6 +78,7 @@ function buttonPress(e) {
         if (operation && !(current === null)) { //If we already have a previous operation, we have to do that first.
             doOper();
         }
+        dotCheck();
         quickStore();
         operation = targ.id;
     }
@@ -76,38 +88,46 @@ function buttonPress(e) {
             doOper();
             console.log("valid equals");
         }
+        dotCheck();
         quickStore();
     }
     else if (targ.id == "decimal") {
         console.log("valid decimal");
+        if (current === null) { //Always set to 0
+            current = 0;
+            decimal = null;
+        }
         if (decimal === null) {
             decimal = 0;
         }
-        if (current === null) { //Always set to 0.0
-            current = 0.0;
-            display.textContent = current;
-        }
+        display.textContent = current + ".";
         
     }
     else if (targ.id == "delete") {
         if (!(current === null)) {
-            if (decimal) {
+            if (decimal === 0) {
+                decimal = null;
+            }
+            else if (decimal) {
                 decimal--;
                 console.log(decimal);
                 current = Math.floor(current * (10 ** (decimal))) / (10 ** (decimal));
-                (decimal == 0) && (decimal = null);
             }
             else {
                 current = Math.floor(current / 10);
                 decimal = null;
             }
             display.textContent = current;
+            if (decimal === 0) {
+                display.textContent += ".";
+            }
         }
     }
     else if (targ.id == "clear") {
         current = 0; //We want this to be zero, so that it will be swapped into tempStore and we reset fully
         quickStore();
-        display.textContent = "0";
+        deciStore = 0;
+        display.textContent = "0.";
     }
 }
 
