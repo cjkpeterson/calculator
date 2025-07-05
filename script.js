@@ -18,10 +18,41 @@ let deciStore = 0;
 
 display.textContent = "0.";
 
-function dotCheck() {
-    if (current % 1 == 0 && decimal == null) { // If it's whole...
+function isRepeatingDecimal(numerator, denominator) {
+  function gcd(a, b) {
+    return b === 0 ? a : gcd(b, a % b);
+  }
+
+  // Reduce the fraction
+  const divisor = gcd(numerator, denominator);
+  denominator /= divisor;
+
+  // Remove all 2s and 5s
+  while (denominator % 2 === 0) denominator /= 2;
+  while (denominator % 5 === 0) denominator /= 5;
+
+  // If anything remains, it's repeating
+  return denominator !== 1;
+}
+
+function countDecimalPlaces(num) {
+  const str = num.toString();
+  if (str.includes('.')) {
+    return str.split('.')[1].length;
+  }
+  return 0;
+}
+function fixCurrent() {
+    current = parseFloat(current.toFixed(decimal));
+}
+
+
+function dotCheck() { //helper function, to add a dot to the display if necessary
+    if (current % 1 == 0 && !decimal) { // If it's whole...
         console.log("adding .");
-        display.textContent += ".";
+        if (current) {
+            display.textContent = current + ".";
+        }
         decimal = 0;
     }
 }
@@ -38,17 +69,33 @@ function quickStore() {
 
 function doOper() {
     if (operation == "add") {
-     current += tempStore;
+        current += tempStore;
+        decimal = Math.max(decimal, deciStore);
     }
     else if (operation == "subtract") {
-     current = tempStore - current;
+        current = tempStore - current;
+        decimal = Math.max(decimal, deciStore);
     }
     else if (operation == "multiply") {
-     current *= tempStore;
+        current *= tempStore;
+        decimal += deciStore;
+
     }
     else if (operation == "divide") {
-     current = tempStore / current;
+        if (isRepeatingDecimal(tempStore, current)) {
+            current = tempStore / current;
+            decimal = countDecimalPlaces(current);
+        }
+        else {
+            current = tempStore / current;
+            decimal += deciStore;
+        }
+        
     }
+    decimal = Math.min(decimal, countDecimalPlaces(current));
+    console.log(decimal);
+    fixCurrent();
+    deciStore = 0;
     tempStore = null;
     display.textContent = current;
 
@@ -65,7 +112,7 @@ function buttonPress(e) {
         }
         else if (!(decimal === null)) {
             current += num * (0.1 ** ++decimal);
-            current = parseFloat(current.toFixed(decimal));
+            fixCurrent();
         }
         else {
             current = current * 10 + num;
