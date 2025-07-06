@@ -15,6 +15,7 @@ let tempStore = 0;
 let operation = null;
 let decimal = 0;
 let deciStore = 0;
+let negative = false;
 
 display.textContent = "0.";
 
@@ -42,19 +43,25 @@ function countDecimalPlaces(num) {
   }
   return 0;
 }
+
+function reverseSign(n) {
+    return n === 0 ? n : -n;
+}
+
 function fixCurrent() {
     current = parseFloat(current.toFixed(decimal));
 }
 
 
-function dotCheck() { //helper function, to add a dot to the display if necessary
-    if (current % 1 == 0 && !decimal) { // If it's whole...
+function dotCheck() { //helper function, to display temp, w/ dot if necessary
+    if (tempStore % 1 == 0 && !deciStore) { // If it's whole...
         console.log("adding .");
-        if (current) {
-            display.textContent = current + ".";
-        }
-        decimal = 0;
+        display.textContent = tempStore + ".";
     }
+    else {
+        display.textContent = tempStore;
+    }
+
 }
 
 function quickStore() {
@@ -65,6 +72,8 @@ function quickStore() {
     }
     decimal = 0;
     operation = null;
+    negative = false;
+    dotCheck();
 }
 
 function doOper() {
@@ -97,7 +106,6 @@ function doOper() {
     fixCurrent();
     deciStore = 0;
     tempStore = null;
-    display.textContent = current;
 
 }
 
@@ -110,12 +118,19 @@ function buttonPress(e) {
             decimal = null;
             current = num;
         }
-        else if (!(decimal === null)) {
-            current += num * (0.1 ** ++decimal);
-            fixCurrent();
-        }
         else {
-            current = current * 10 + num;
+            current = Math.abs(current);
+            if (!(decimal === null)) {
+                current += num * (0.1 ** ++decimal);
+                fixCurrent();
+            }
+            else {
+                current = current * 10 + num;
+            }
+
+            if (negative) {
+                current = -current;
+            }
         }
         display.textContent = current;
         
@@ -125,7 +140,6 @@ function buttonPress(e) {
         if (operation && !(current === null)) { //If we already have a previous operation, we have to do that first.
             doOper();
         }
-        dotCheck();
         quickStore();
         operation = targ.id;
     }
@@ -135,7 +149,7 @@ function buttonPress(e) {
             doOper();
             console.log("valid equals");
         }
-        dotCheck();
+        
         quickStore();
     }
     else if (targ.id == "decimal") {
@@ -146,12 +160,34 @@ function buttonPress(e) {
         }
         if (decimal === null) {
             decimal = 0;
+            display.textContent = current + ".";
         }
-        display.textContent = current + ".";
+        
         
     }
+    else if (targ.id == "switch") {
+        console.log("valid switch signs");
+        if (current === null) {
+            tempStore = reverseSign(tempStore);
+            dotCheck();
+        }
+        else {
+            negative = !negative;
+            current = -current;
+            display.textContent = "";
+            if ((current === -0) && negative) {
+                display.textContent = "-";
+            }
+            display.textContent += current;
+            if (decimal === 0) {
+                display.textContent += ".";
+            }
+        }
+    }
+
     else if (targ.id == "delete") {
         if (!(current === null)) {
+            current = Math.abs(current);
             if (decimal === 0) {
                 decimal = null;
             }
@@ -163,6 +199,15 @@ function buttonPress(e) {
             else {
                 current = Math.floor(current / 10);
                 decimal = null;
+            }
+            
+            if (negative) {
+                if (current === 0) {
+                    negative = false;
+                }
+                else {
+                    current = -current;
+                }
             }
             display.textContent = current;
             if (decimal === 0) {
